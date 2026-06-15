@@ -1,82 +1,53 @@
-def generate_response(user_input, system_prompt, chat_history):
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
 
-    user_input = user_input.lower()
+from utils.logger import logger
 
-    if "data scientist" in user_input:
+load_dotenv()
 
-        return """
-## Roadmap to Become a Data Scientist
+genai.configure(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 
-1. Learn Python
-2. Learn Statistics and Mathematics
-3. Learn Machine Learning
-4. Practice SQL
-5. Build Projects
-6. Learn Deep Learning
-7. Create a GitHub Portfolio
+model = genai.GenerativeModel(
+    "gemini-2.5-flash"
+)
 
-Recommended Tools:
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
-- TensorFlow
+
+def generate_response(
+        user_input,
+        system_prompt,
+        chat_history):
+
+    try:
+
+        logger.info(user_input)
+        history_text = ""
+
+        for msg in chat_history:
+
+            history_text += (
+                f"{msg['role']}: "
+                f"{msg['content']}\n"
+            )
+
+        final_prompt = f"""
+{system_prompt}
+
+Conversation History:
+{history_text}
+
+Current User Question:
+{user_input}
 """
 
-    elif "full stack" in user_input:
+        response = model.generate_content(
+            final_prompt
+        )
 
-        return """
-## Roadmap to Become a Full Stack Developer
+        return response.text
 
-1. Learn HTML, CSS, JavaScript
-2. Learn React.js
-3. Learn Backend Development
-4. Learn Node.js and Express
-5. Learn Databases
-6. Build Projects
-7. Deploy Applications
+    except Exception as e:
 
-Recommended Technologies:
-- React
-- Node.js
-- MongoDB
-- Express.js
-"""
-
-    elif "interview" in user_input:
-
-        return """
-## Interview Preparation Tips
-
-1. Practice DSA
-2. Build strong projects
-3. Revise core concepts
-4. Practice mock interviews
-5. Improve communication skills
-"""
-
-    elif "resume" in user_input:
-
-        return """
-## Resume Improvement Tips
-
-1. Add strong projects
-2. Mention technical skills
-3. Use proper formatting
-4. Keep resume concise
-5. Add GitHub and LinkedIn links
-"""
-
-    else:
-
-        return """
-I am your AI Career Advisor chatbot.
-
-You can ask me about:
-- Data Science
-- Full Stack Development
-- AI/ML
-- Career Roadmaps
-- Resume Building
-- Interview Preparation
-"""
+        return f"Error: {str(e)}"
